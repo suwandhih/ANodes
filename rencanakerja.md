@@ -6,6 +6,68 @@
 > Catatan: dokumen ini = peta jalan ANodes. Diperbarui setiap ada keputusan baru.
 > 📅 **Dokumen ini dibangun: 03 Nov 2026 18:47** — kalau isinya terasa belum berubah, tekan **🔄 Segarkan** di menu [Doc].
 
+> ## 🆕 K107 ✅ SELESAI (26 Nov 2026) — 🚀 **PROGRAM DIPINDAH KE GITHUB → SIAP DIPINDAH KE SERVER**
+>
+> 💬 **Pemilik proyek 26 Nov 2026:** *“1. saya mau program yg penting di pindahkan ke github .. mau saya pindah
+> ke server · 2. didalam aplikasi ini ada alkitab tentu ada isi kitab2 juga harus dipindahkan.. termasuk semua
+> plugin yg ada konten ikut dipindahkan · 3. scrip yg tidak ada hubungan untuk menjalankan sistem ANodes tidak
+> perlu dipindah ke github”* → lalu *“pokok mau dipindah.. setelah data pindah ke server develop aplikasi.. github
+> ANodes di hapus.. jadi tujuannya hanya sebagai jembatan untuk mengirim data”* · **publik** · tambahan:
+> **panduan.md · CHANGELOG.md · prompt.md · rencanakerja.md**.
+>
+> ### 🔎 DIUKUR DULU (❌ bukan diduga) — apa yang BENAR-BENAR dipakai aplikasi
+>
+> | Yang diperiksa | Hasil |
+> |---|---|
+> | `<script src>` di `index.html` | **61 rujukan** (10 `js/` + 51 `plugin/`) — **0 hilang** |
+> | `index.html` | 53.645 B |
+> | `css/` | 2 berkas · 234.837 B |
+> | `js/` | 10 berkas · 285.357 B |
+> | `plugin/` | **13 plugin · 57 berkas · 40.291.531 B** |
+> | `worker/` | `worker.js` + `README.md` · 10.782 B |
+> | **TOTAL WAJIB** | **74 berkas · 41,7 MB** |
+> | Terbesar | `penguat.js` **12,40 MB** ⇒ jauh di bawah batas GitHub **100 MB/berkas** |
+>
+> **⚠️ TEMUAN PENTING:** `worker/_kredensial.json` memuat **TURSO_TOKEN**. ⇒ **Dikecualikan** + masuk `.gitignore`.
+> Alamat Worker & kunci aplikasi di `js/sinkron.js` **boleh ikut** (memang ditanam untuk klien).
+>
+> ### ⚙️ Pelaksanaan
+>
+> | Langkah | Hasil |
+> |---|---|
+> | Folder kirim **TERPISAH** | `C:\data\ANodes-gh` — ❌ tidak mengacaukan folder kerja `C:\data\ANodes` |
+> | Salin | `index.html` · `css/` · `js/` · `plugin/` · `worker/{worker.js,README.md}` · `package.json` · `package-lock.json` · 4 dokumen |
+> | Berkas baru | **`README.md`** (cara jalan + lisensi data) · **`.gitignore`** (kredensial, build, `tools/`, `backups/`) |
+> | Repo | `suwandhih/ANodes` (**publik**, sudah ada & kosong) · cabang **`main`** · commit `d4b9d4c` |
+> | **GitHub Pages** | ✅ diaktifkan → **https://suwandhih.github.io/ANodes/** · status **built** |
+>
+> ### 📊 HASIL TERUKUR (HTTP nyata dari server GitHub Pages)
+>
+> | Berkas | Kode | Byte |
+> |---|---|---|
+> | `index.html` | 200 | 53.645 |
+> | `plugin/penguat/data/penguat.js` | 200 | **12.999.785** |
+> | `plugin/alkitab/data/alkitab-tb.js` | 200 | **5.325.650** |
+> | `plugin/ayat-terkait/data/silang.js` | 200 | **5.462.104** |
+> | `plugin/paralel/data/paralel.js` | 200 | **5.195.184** |
+>
+> **BUKTI DI BROWSER (dibuka dari `https://suwandhih.github.io/ANodes/`):** 66 kitab · Wahyu 22:21 terbaca ·
+> penguat **66 kitab** · kaitan **344.100** · paralel AYT **31.102 ayat** · perikop **2.573 judul** ·
+> kamus **2.978 entri** · Yohanes 3 ⇒ **36 ayat** · sesudah plugin dipasang ⇒ **36 kotak AYT** + **2 label perikop**
+> · tombol `#baca-paralel` **nyala** · 12 plugin terpasang **0 gagal**.
+>
+> ### ⚠️ YANG TIDAK IKUT (sesuai arahan butir 3)
+>
+> `android-native/` (214 MB) · `backups/` + `artifacts/` (531 MB) · `tools/` (70 MB) · `ANodes-1berkas.html` (40,8 MB) ·
+> `agents.md` + `agents-riwayat.md` · `cat/` · `peta-lab*` · `usul-*.md` · `catatan-konsep-*` · `node_modules/`.
+> ⇒ Semua ini **bukan** bagian menjalankan aplikasi; data hasil `tools/` **sudah ada** di `plugin/*/data/`.
+>
+> ### ⚠️ CATATAN
+>
+> - Repo ini **jembatan** — pemilik proyek akan **menghapus repo GitHub** setelah data pindah ke server.
+> - `worker/_kredensial.json` **hanya ada di komputer ini**; token tetap harus disetel ulang sebagai Secret di Cloudflare bila worker dipasang ulang.
+> - Setiap perbaikan berikutnya di `C:\data\ANodes` **tidak otomatis** masuk GitHub — perlu salin + push ulang ke `C:\data\ANodes-gh`.
+
 >
 > 🆕 **1 Nov 2026 — `rencanakerja-next.md` DIGABUNG KE SINI LALU DIHAPUS.**
 > Tiga plugin teologi (**K85** 🔤 Interlinear Strong · **K86** 🔀 Paralel terjemahan ·

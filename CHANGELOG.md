@@ -1,3 +1,15 @@
+## 26 November 2026 — 🚀 K107: PROGRAM DIPINDAH KE GITHUB (JEMBATAN KE SERVER)
+
+- Repo publik `suwandhih/ANodes` dibuat dari folder kirim terpisah `C:\data\ANodes-gh` (folder kerja tidak diubah).
+- Isi: 74 berkas wajib = `index.html` + `css/` (2) + `js/` (10) + `plugin/` (13 plugin, 57 berkas, 40,29 MB) + `worker/{worker.js,README.md}` + `package.json`/`package-lock.json`; ditambah 4 dokumen (panduan, CHANGELOG, prompt, rencanakerja) + README + .gitignore. Total 80 berkas / 42.700.804 B.
+- Seluruh isi kitab dan konten plugin ikut: alkitab-tb 5,08 MB · penguat 12,40 MB · silang 5,21 MB · paralel 4,95 MB · interlinear 8,85 MB · kamus · peta · sejarah · perikop · linimasa · baca1tahun.
+- `worker/_kredensial.json` (memuat TURSO_TOKEN) DIKECUALIKAN dan masuk `.gitignore`; terbukti tidak ada di repo (`worker/` hanya README.md + worker.js).
+- Tidak ikut (bukan bagian menjalankan sistem): android-native, backups, artifacts, tools, ANodes-1berkas.html, agents.md, agents-riwayat.md, cat, peta-lab*, usul-*.md, catatan-konsep-*, node_modules.
+- GitHub Pages diaktifkan: https://suwandhih.github.io/ANodes/ — build `built`, error null. Diverifikasi lewat HTTP: index.html 200/53.645 B; penguat.js 200/12.999.785 B; alkitab-tb.js 200/5.325.650 B; silang.js 200/5.462.104 B; paralel.js 200/5.195.184 B.
+- Diverifikasi di browser dari server: 66 kitab, Wahyu 22:21 terbaca, penguat 66 kitab, kaitan 344.100, paralel 31.102 ayat, perikop 2.573 judul, kamus 2.978 entri, Yohanes 3 = 36 ayat, 36 kotak AYT, 2 label perikop, 12 plugin terpasang tanpa galat.
+- Repo ini jembatan: akan dihapus pemilik setelah data pindah ke server. Perbaikan berikutnya di `C:\data\ANodes` tidak otomatis masuk GitHub.
+
+---
 ## 13 November 2026 — 🔄 K105: SINKRON ANDROID TIDAK MENAHAN JAVASCRIPT
 
 ## 24 November 2026 — K106: Koreksi ZIP impor server
