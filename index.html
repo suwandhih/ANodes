@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<!-- K79 (28 Okt 2026) — `viewport-fit=cover` WAJIB supaya `env(safe-area-inset-*)`
+     terbaca. Tanpa ini, di HP ber-lubang kamera (mis. Z Fold 3) kepala aplikasi
+     duduk TEPAT di bawah kamera sehingga sulit disentuh. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ANodes — Catatan</title>
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<!-- Seluruh aplikasi dibungkus: lebar tetap gaya HP, dipusatkan di PC -->
+<div class="app" id="app-utama">
+
+<!-- ===================== KEPALA HITAM ===================== -->
+<header class="kepala">
+  <span class="merk"><span class="merk-teks">ANodes</span></span>  <span class="tahap">Tahap 5</span>
+  <span class="titik" id="titik" title="Status simpan"></span>
+  <span class="sp"></span>
+  <span class="aksi">
+
+    <!-- 🔴 K104 (6 Nov 2026) — tombol ▦ Tulis DIHAPUS.
+             Toolbar tulis kini SELALU tampil (tidak bisa disembunyikan), karena
+             cacat "menu hilang" di HP berasal dari keadaan tersembunyi yang
+             tersimpan di localStorage. -->
+
+    <!-- pengaturan -->
+    <button id="btn-setting" class="ghost" title="Pengaturan (huruf, kecerahan, pintasan)"><span class="ik">⚙</span><span class="lbl">Setelan</span></button>
+
+    <!-- gudang plugin -->
+    <button id="btn-plugin" class="ghost" title="Gudang Plugin"><span class="ik">🧩</span><span class="lbl">Plugin</span></button>
+
+    <!-- menu File -->
+    <span class="grup-kepala">
+      <button id="btn-file" class="ghost" title="Menu berkas"><span class="ik">📂</span><span class="lbl">File</span> <span class="panah">▼</span></button>
+      <div class="menu-kepala" id="menu-file">
+        <button data-aksi="open">📂 Open</button>
+        <span class="pisah-menu"></span>
+        <button data-aksi="baru">＋ New</button>
+        <button data-aksi="simpan">💾 Save</button>
+        <button data-aksi="hapus">🗑 Del</button>
+        <span class="pisah-menu"></span>
+        <button data-aksi="impor">⤒ Impor… (.md · .txt · .json)</button>
+        <button data-aksi="ekspor-md">⤓ Ekspor .md</button>
+        <button data-aksi="ekspor-txt">⤓ Ekspor .txt</button>
+        <button data-aksi="ekspor-pdf">⤓ Ekspor .pdf</button>
+        <span class="pisah-menu"></span>
+        <button data-aksi="ekspor">⤓ Cadangan .json</button>
+        <span class="pisah-menu"></span>
+        <button data-aksi="sinkron">☁️ Sinkron…</button>
+                <span class="pisah-menu"></span>
+                <!-- 👤 K100 (3 Nov 2026) — pemisahan data per email.
+                     Ditanya SEKALI saat pertama membuka ANodes; sesudah itu diingat.
+                     Bisa diganti dari sini kapan saja. -->
+                <button id="menu-pengguna">👤 Pengguna…</button>
+              </div>
+    </span>
+
+    <!-- tombol cari: pintasan ke pencarian DI DALAM catatan yang sedang dibuka (K29).
+         Pencarian ANTAR-catatan + saring kategori ada di panel daftar (📂 Open). -->
+    <button id="btn-cari" class="ghost" title="Cari kata di catatan yang sedang dibuka (Ctrl+F)"><span class="ik">🔍</span><span class="lbl">Cari</span></button>
+
+    <!-- 🗂️ BERKAS TERSIMPAN (K28h — 3 Nov 2026)
+         Dulu daftar ini ada di menu [Doc] → baris 🌿 Ayat Terkait.
+         Menu [Doc] dihapus atas keputusan pemilik proyek, jadi daftarnya
+         dipindah ke halaman sendiri supaya rantai yang sudah disimpan
+         tetap bisa dibuka / dikirim ke catatan / dihapus. -->
+    <button id="btn-berkas" class="ghost" title="Berkas tersimpan — daftar rantai ayat terkait yang sudah disimpan"><span class="ik">🗂️</span><span class="lbl">Berkas</span></button>
+
+        <!-- ❓ BANTUAN (K64 b–e — 3 Nov 2026)
+             SATU tombol, isinya MENYESUAIKAN halaman yang sedang terbuka
+             (catatan · Alkitab · kerja · kamus · penguat · sejarah · peta ·
+              bookmark · bacaan 1 tahun · berkas · halaman keterangan plugin).
+             Ditaruh di kepala — bukan di tiap navbar — karena navbar Alkitab
+             sudah penuh (9 tombol, terukur 324 = 324 px di layar 344 px). -->
+        <button id="btn-bantuan" class="ghost" title="Bantuan — isinya menyesuaikan halaman yang sedang dibuka"><span class="ik">❓</span><span class="lbl">Bantuan</span></button>
+
+      </span>
+</header>
+
+<!-- ===================== BADAN ===================== -->
+<div class="wrap">
+
+  <!-- ---------- panel atas: daftar catatan ---------- -->
+  <aside class="aside" id="panel-daftar">
+    <div class="aside-kepala">
+      <h3>Catatan <span id="jumlah-catatan"></span></h3>
+      <button id="btn-tutup-daftar" class="mini" title="Sembunyikan daftar (ruang tulis lebih luas)">▲</button>
+    </div>
+
+    <!-- cari ANTAR-catatan + saring kategori (pindahan dari menu Cari lama) -->
+    <div class="daftar-cari">
+      <input type="text" id="cari" placeholder="🔍 cari di daftar catatan…" title="Cari judul / isi di antara semua catatan">
+      <select id="filter-kategori" title="Saring kategori">
+        <option value="">Semua</option>
+      </select>
+    </div>
+
+    <div class="daftar" id="daftar-catatan"></div>
+  </aside>
+
+  <!-- ---------- panel tengah: editor ---------- -->
+  <main class="main">
+    <div class="info">
+      <b id="info-nama">—</b>
+      <span class="info-pisah">·</span>
+      <span class="info-lbl">Kategori:</span>
+      <select id="info-kategori" title="Kategori catatan ini"></select>
+      <span class="info-pisah">·</span>
+      <span id="info-kata">0 kata</span>
+      <!-- 📖 Tampilkan catatan ini RAPI (16 Sep 2026)
+           Muncul hanya kalau isi catatan masih MARKDOWN MENTAH (mis. hasil impor
+           rencanakerja.md). Isi mentahnya TETAP utuh — mode ini hanya untuk membaca. -->
+      <button id="info-rapi" class="info-rapi" hidden
+              title="Tampilkan catatan ini rapi (judul, tabel, kutipan) — hanya untuk membaca">📖 Rapi</button>
+      <!-- 📥 K40 (17 Sep 2026) — INSERT hasil ayat terkait ke catatan.
+           Muncul HANYA kalau ada rantai yang sedang dipegang (dikirim dari
+           [Doc] → 🌿 Ayat Terkait → [ + Ayat ]).
+           Cara pakai: klik di catatan (tentukan letak) → tekan tombol ini. -->
+      <button id="info-insert" class="info-insert" hidden
+              title="Masukkan ayat terkait di tempat kursor (klik dulu di catatan)">+ Ayat</button>
+      <!-- 🔌 K70 (5 Okt 2026) — SAKELAR penandaan catatan (ayat · istilah · 🖊).
+           Bawaan OFF supaya mengetik tanpa lag; tekan ⇒ nyala & langsung ditandai.
+           ⚠️ Yang berhenti HANYA penandaan DI CATATAN — halaman plugin tetap hidup. -->
+      <button id="info-tandai" class="info-tandai"
+              title="Sakelar penandaan catatan">🔗 OFF</button>
+    </div>
+
+    <!-- ================= BAR PAKET AYAT (menggantikan toolbar tulis) =================
+         Muncul kalau ada “paket ayat” yang sudah disimpan dari halaman Alkitab.
+         Cara pakai (K20):
+           1. klik di catatan, di tempat paket mau ditaruh
+           2. tekan [Tempel ⇩] → paket masuk + disorot kuning
+           3. salah tempat? tekan [↶ Batalkan] → paket diangkat, klik tempat lain
+           4. sudah pas? tekan [❌ Selesai] → bar ini TUTUP, toolbar tulis kembali
+         ⚠️ Bar ini TIDAK mengatur #toolbar.hidden sendiri — semuanya lewat
+            ANodesPlugin.terapkanBar() (satu pengatur, supaya tidak bentrok). -->
+    <div class="bar-paket" id="toolbar-paket" hidden>
+      <span class="bp-lbl" id="bp-lbl" title="Paket ayat siap ditempel">📋 —</span>
+      <!-- K40 (17 Sep 2026) — pilihan bentuk masukan (seperti K20):
+           [💬 Kalimat] hidup/mati · [panjang ⇄ singkat] -->
+      <button id="bp-kalimat" class="bp-opsi bp-kalimat"
+              title="Kalimat ayat ikut dimasukkan (hidup = ikut)">💬 Kalimat</button>
+      <button id="bp-format" class="bp-opsi bp-format"
+              title="Bentuk nama ayat yang dimasukkan">Rom 4:3</button>
+      <button id="bp-tempel" class="bp-tempel" title="Tempel paket di tempat kursor (klik dulu di catatan)">Tempel ⇩</button>
+      <button id="bp-ulang" class="bp-opsi" title="Ambil kembali paket dari catatan, lalu pilih tempat lain" hidden>↶ Batalkan</button>
+      <button id="bp-buang" class="bp-opsi" title="Buang paket ini">❌ Buang</button>
+    </div>
+
+    <!-- ================= TOOLBAR (hemat ruang) ================= -->
+    <!-- 🔍 BILAH CARI DI CATATAN (K29) — muncul hanya saat mencari (Ctrl+F / tombol 🔍 Cari) -->
+    <div class="bar-cari" id="bar-cari" hidden>
+      <input type="search" id="cari-isi" placeholder="🔍 cari kata di catatan ini…"
+             title="Cari kata di catatan yang sedang dibuka — Enter = berikutnya, Shift+Enter = sebelumnya, Esc = tutup"
+             autocomplete="off">
+      <button id="cari-isi-prev" class="cari-panah" title="Temuan sebelumnya (Shift+Enter)">◀</button>
+      <button id="cari-isi-next" class="cari-panah" title="Temuan berikutnya (Enter)">▶</button>
+      <span class="cari-info" id="cari-isi-info"></span>
+      <button id="cari-isi-tutup" class="cari-panah" title="Tutup pencarian (Esc)">✕</button>
+    </div>
+
+    <div class="toolbar" id="toolbar">
+
+      <!-- batal / ulangi (undo / redo) — selamat kalau salah edit -->
+      <button data-aksi="undo" title="Batal tulis / kembalikan yang tadi salah (Ctrl+Z)">↶</button>
+      <button data-aksi="redo" title="Ulangi yang tadi dibatalkan (Ctrl+Y)">↷</button>
+
+      <!-- kelompok Size: H1 H2 H3 ¶ -->
+      <div class="grup">
+        <button class="dasar" data-grup="size" title="Ukuran / gaya tulisan">
+          <span id="size-label">¶</span> <span class="panah">▼</span>
+        </button>
+        <div class="submenu" data-sub="size">
+          <button data-fmt="h1">H1</button>
+          <button data-fmt="h2">H2</button>
+          <button data-fmt="h3">H3</button>
+          <button data-fmt="p">¶</button>
+        </div>
+      </div>
+
+      <!-- kelompok List -->
+      <div class="grup">
+        <button class="dasar" data-grup="list" title="Daftar">
+          <span id="list-label" class="lbl-penuh">• List</span><span class="lbl-pendek">•</span> <span class="panah">▼</span>
+        </button>
+        <div class="submenu" data-sub="list">
+          <button data-fmt="bullet">• Titik</button>
+          <button data-fmt="number">1. Nomor</button>
+          <button data-fmt="icon-list">✅ Icon List</button>
+        </div>
+      </div>
+
+      <!-- tebal / miring -->
+      <button data-fmt="bold" title="Tebal"><b>B</b></button>
+      <button data-fmt="italic" title="Miring"><i>I</i></button>
+
+      <!-- kelompok Tabel -->
+      <div class="grup">
+        <button class="dasar" data-grup="tabel" title="Tabel">
+          <span>▦</span> <span class="panah">▼</span>
+        </button>
+        <div class="submenu" data-sub="tabel">
+          <button data-fmt="tabel">▦ Sisip tabel</button>
+          <button data-fmt="edit-tabel">✎ Edit tabel</button>
+        </div>
+      </div>
+
+      <!-- Stabilo -->
+      <div class="grup">
+        <button class="dasar" data-grup="stab" title="Stabilo (klik = kuning, ▼ = pilih warna)">
+          <span>▬</span> <span class="dot" id="stab-dot" style="background:#fff176"></span> <span class="panah">▼</span>
+        </button>
+        <div class="submenu warna-grid" data-sub="stab">
+          <button class="warna" data-stab="#fff176" title="Kuning"><span style="background:#fff176"></span></button>
+          <button class="warna" data-stab="#b9f6ca" title="Hijau"><span style="background:#b9f6ca"></span></button>
+          <button class="warna" data-stab="#b3e5fc" title="Biru"><span style="background:#b3e5fc"></span></button>
+          <button class="warna" data-stab="#f8bbd0" title="Pink"><span style="background:#f8bbd0"></span></button>
+          <button class="warna" data-stab="#ffe0b2" title="Oranye"><span style="background:#ffe0b2"></span></button>
+        </div>
+      </div>
+
+      <!-- Warna huruf -->
+      <div class="grup">
+        <button class="dasar" data-grup="huruf" title="Warna huruf (klik = terakhir, ▼ = pilih warna)">
+          <span style="font-weight:700">A</span> <span class="dot" id="huruf-dot" style="background:#d32f2f"></span> <span class="panah">▼</span>
+        </button>
+        <div class="submenu warna-grid" data-sub="huruf">
+          <button class="warna" data-huruf="#111111" title="Hitam"><span style="background:#111111"></span></button>
+          <button class="warna" data-huruf="#d32f2f" title="Merah"><span style="background:#d32f2f"></span></button>
+          <button class="warna" data-huruf="#2e7d32" title="Hijau"><span style="background:#2e7d32"></span></button>
+          <button class="warna" data-huruf="#1565c0" title="Biru"><span style="background:#1565c0"></span></button>
+          <button class="warna" data-huruf="#7b1fa2" title="Ungu"><span style="background:#7b1fa2"></span></button>
+          <button class="warna" data-huruf="#ef6c00" title="Oranye"><span style="background:#ef6c00"></span></button>
+        </div>
+      </div>
+
+      <!-- bersihkan warna -->
+      <button data-fmt="hapus-warna" title="Hapus stabilo / warna huruf">✕</button>
+
+      <!-- Icon -->
+      <div class="grup">
+        <button class="dasar" data-grup="icon" title="Sisip icon">
+          <span id="icon-isi">✅</span> <span class="panah">▼</span>
+        </button>
+        <div class="submenu icon-grid" data-sub="icon">
+          <button data-icon="✅">✅</button>
+          <button data-icon="⭐">⭐</button>
+          <button data-icon="❤️">❤️</button>
+          <button data-icon="⚠️">⚠️</button>
+          <button data-icon="💡">💡</button>
+          <button data-icon="📌">📌</button>
+          <button data-icon="🔥">🔥</button>
+          <button data-icon="❓">❓</button>
+          <button data-icon="❌">❌</button>
+          <button data-icon="➡️">➡️</button>
+          <button data-icon="📝">📝</button>
+          <button data-icon="📅">📅</button>
+          <button data-icon="💰">💰</button>
+          <button data-icon="🎯">🎯</button>
+          <button data-icon="🔔">🔔</button>
+          <button data-icon="📞">📞</button>
+          <button data-icon="🏠">🏠</button>
+          <button data-icon="🚗">🚗</button>
+          <button data-icon="🍽️">🍽️</button>
+          <button data-icon="☕">☕</button>
+          <button data-icon="📖">📖</button>
+          <button data-icon="✝️">✝️</button>
+          <button data-icon="🙏">🙏</button>
+          <button data-icon="🕊️">🕊️</button>
+          <button data-icon="👑">👑</button>
+          <button data-icon="🌿">🌿</button>
+          <button data-icon="🌞">🌞</button>
+          <button data-icon="•">•</button>
+        </div>
+      </div>
+
+      <!-- Plugin yang SUDAH terpasang.
+           Isi submenu ini digambar js/plugin.js (renderToolbar()) — jadi
+           yang muncul hanya plugin yang sedang terpasang. -->
+      <div class="grup">
+        <button class="dasar" data-grup="plugin" title="Plugin yang sudah terpasang (klik untuk pilih)">
+          <span id="plugin-isi">🧩</span> <span class="panah">▼</span>
+        </button>
+        <div class="submenu submenu-plugin" data-sub="plugin"></div>
+      </div>
+
+      <!-- lihat kode (dihapus - user tidak perlu) -->
+    </div>
+
+    <!-- area tulis -->
+    <div class="area">
+      <div id="editor" contenteditable="true" data-placeholder="Tulis catatan di sini..."></div>
+    </div>
+
+    <!-- status bawah -->
+    <div class="status">
+      <span id="status-nama">belum ada catatan</span>
+      <span class="sp"></span>
+      <span id="status-tahap">ANodes · Tahap 5 · v6Nov-c</span>
+    </div>
+  </main>
+
+</div>
+<!-- /wrap -->
+
+</div>
+<!-- /app-utama -->
+
+<!-- ================= HALAMAN BACA ALKITAB (sebesar catatan) =================
+     Toolbar baca — SATU BARIS (supaya tidak terpotong di HP):
+     [🏠][Kitab ▾][Pasal ▾][◀][▶][↩][📋 PILIH][🔍 Cari]
+     • 🏠 (dulu “↑ kembali”) — hemat ruang, balik ke catatan.
+     • 🔍 Cari — satu pintu untuk nama ayat DAN kata/kutipan
+       (fungsi ⌨ KETIK + kotak cari disatukan).                        -->
+<div class="app halaman-alkitab" id="baca-alkitab" hidden>
+
+  <!-- ============ K63 (23 Sep 2026) — NAVBAR BACA 2 BARIS ============
+       Bapak: *“masuk ke alkitab menu di atas adalah [🏠][ 1 Samuel ▾ ] [📋 PILIH]
+       [🔍 Cari] [📤] [🖊] · 1 Samuel  [ 7 ▾ ]  [ ◀ ] [ ▶ ]  17 ayat”* ⇒
+       **hanya MERAPIKAN tata letak — ❌ tidak ada perubahan metode/konsep.**
+
+       baris 1 : [🏠] [ 1 Samuel ▾ ] [📋 PILIH] [🔍 Cari] [📤] [🖊]
+       baris 2 : 1 Samuel  [ 7 ▾ ]  [◀] [▶] [↩]        17 ayat
+       ⇒ baris 2 **SEKALIGUS JUDUL** pasal. *“user tetap bisa pilih kitab >
+         pulldown [ 1 Samuel ▾ ] atau [📋 PILIH] setelah itu dibawah muncul
+         1 Samuel > 7 sesuai pilih user.”*
+       ⇒ SELURUH navbar **di-freeze** (`flex-shrink: 0` di `.halaman-alkitab`,
+         di LUAR `#baca-isi` yang menggulir).
+
+       ⚠️ **↩ (riwayat) ditaruh di BARIS 2** bersama ◀ ▶ — persis seperti sketsa
+          Bapak (baris 1 hanya 6 tombol) ⇒ baris 1 cukup sempit sehingga navbar
+          **selalu 2 baris** di HP. Kalau masih tidak muat, baris 1 masih boleh
+          membungkus (`flex-wrap: wrap`) tanpa perlu menggeser. -->
+  <div class="alkitab-nav" id="alkitab-nav">
+    <div class="ay-nav-b1">
+      <button id="baca-kembali" class="kembali" title="Kembali ke catatan (di tempat tadi diklik)">🏠</button>
+      <select id="baca-kitab" class="ay-kitab-pilihan" title="Pilih kitab"></select>
+      <button id="baca-pilih" title="Pilih kitab → pasal → ayat">📋<span class="ay-lbl"> PILIH</span></button>
+      <button id="baca-ketik" title="Cari: ketik nama ayat (mis. ibr 11:1) atau kata/kutipan (mis. kasih)">🔍<span class="ay-lbl"> Cari</span></button>
+    </div>
+    <div class="ay-nav-b2">
+      <span class="ay-nav-kitab" id="baca-kitab-nama" title="Kitab yang sedang dibuka — ganti lewat kotak pilihan atau 📋 PILIH">—</span>
+      <select id="baca-pasal" title="Pilih pasal"></select>
+      <button id="baca-prev" title="Pasal sebelumnya">◀</button>
+      <button id="baca-next" title="Pasal berikutnya">▶</button>
+      <button id="baca-back" title="Kembali ke posisi sebelumnya" disabled>↩</button>
+      <span class="ay-nav-jml" id="ay-nav-jml"></span>
+    </div>
+  </div>
+
+  <!-- ============ BAR KIRIM PAKET (muncul hanya saat angka ayat diklik) ============
+       Cara pakai (K20):
+         1. klik angka ayat  → bar ini muncul (baris ke-2, di bawah bar utama)
+         2. klik angka lain  → jadi rentang (mis. 7-11). Klik angka yang sama = dilepas.
+         3. pilih bentuk paket (tombol 💬 kalimat & 📖 panjang/singkat)
+         4. tekan [📋 Simpan] → paket disimpan, bar ini TUTUP (selesai tugas)
+       Bar utama TETAP ada di atas — jadi bar ini tidak pernah menutupinya. -->
+  <div class="bar-kirim" id="bar-kirim" hidden>
+    <span class="bk-ayat" id="bk-ayat" title="Ayat yang dipilih (klik angka di bacaan)">—</span>
+    <button id="bk-kalimat" class="bk-opsi" title="Sertakan kalimat ayatnya, bukan hanya nama ayat">💬<span class="bk-lbl"> Kalimat</span></button>
+    <button id="bk-ayat-format" class="bk-opsi" title="Ganti tulisan nama ayat: panjang ⇄ singkat">Yoh 4:7</button>
+    <button id="bk-simpan" class="bk-simpan" title="Simpan sebagai paket siap tempel ke catatan">📋<span class="bk-lbl"> Simpan</span></button>
+    <button id="bk-batal" title="Batal memilih ayat">✕</button>
+  </div>
+
+  <!-- BAR BOOKMARK (K81 — 30 Okt 2026) — baris ke-2, dipakai MODE EDIT (K82).
+       ⚠️ Dipasang SETELAH bar-kirim supaya keduanya tidak saling menutupi
+       (hanya satu yang tampil pada satu waktu). -->
+  <div class="bar-bookmark" id="bar-bookmark" hidden>
+    <span class="bm-chip" id="bm-chip">🔖 klik angka ayat</span>
+    <span class="sp"></span>
+    <button id="bm-catatan" class="bm-catatan" title="Tambah catatan satu baris">💬</button>
+    <button id="bm-simpan" class="bm-simpan" disabled>💾 Simpan</button>
+    <button id="bm-batal" class="bm-batal" title="Batal">✕</button>
+  </div>
+
+  <div class="baca-isi" id="baca-isi"></div>
+</div>
+
+<!-- ================= HALAMAN KERJA AYAT TERKAIT (K31 — 15 Sep 2026) =================
+     HALAMAN KE-3 (sejajar #app-utama & #baca-alkitab).
+     Ini MEJA KERJA — tempat user MENYUSUN rantai ayat & MENYIMPANNYA
+     dengan nama. ❌ BUKAN kembali ke catatan: catatan/home memanggil
+     berkas ini nanti (K32).
+
+     Alur: baca pasal → [ayat terkait (n)] → chip → pratinjau →
+           [✓ pilih] → PINDAH ke halaman ini → telusuri ayat demi ayat
+           → tersimpan sendiri dengan nama ayat utama.
+
+     Diisi oleh plugin/ayat-terkait/kerja.js.                       -->
+<div class="app halaman-kerja" id="kerja-ayat" hidden>
+
+  <div class="kerja-nav">
+    <button id="kerja-keluar" title="Keluar dari halaman kerja (kembali ke halaman baca)">🏠</button>
+    <span class="kerja-judul">🌿 Ayat Terkait</span>
+    <span class="kerja-sp"></span>
+    <button id="kerja-pasang" title="Pakai rantai ini di catatan (menyusul: K32)">📥<span class="bk-lbl"> Pakai</span></button>
+    <button id="kerja-buang" title="Buang rantai ini — dikosongkan &amp; dihapus dari daftar simpanan">🗑<span class="bk-lbl"> Buang</span></button>
+    <button id="kerja-atas" title="Ke atas (akar rantai)">⬆</button>
+    <span class="kerja-status" id="kerja-status" title="Keadaan penyimpanan"></span>
+  </div>
+
+  <!-- nama berkas (inline — permintaan Bapak: ❌ jangan popup) -->
+  <div class="kerja-nama-baris">
+    <span class="kn-ikon" title="Nama berkas rantai — bawaan = ayat utama (paling atas)">📛</span>
+    <input type="text" id="kerja-nama" placeholder="nama berkas (bawaan: ayat utama)"
+           title="Beri nama rantai ini — mis. “2 Korintus 1:2” atau judul sendiri (mis. Kasih karunia)"
+           autocomplete="off">
+    <button id="kerja-simpan" title="Simpan sekarang">💾 Simpan</button>
+  </div>
+
+  <div class="kerja-langkah" id="kerja-langkah" title="Jejak jalan rantai ini"></div>
+
+  <div class="kerja-isi" id="kerja-isi"></div>
+</div>
+
+<!-- ================= HALAMAN 📚 KAMUS ISTILAH (K42 — halaman ke-4) =================
+     Sejajar #app-utama · #baca-alkitab · #kerja-ayat · #doc-alkitab.
+     Ukurannya SAMA PERSIS dengan catatan (`.app` 480px) — MENIMPA catatan,
+     ❌ bukan panel kecil, ❌ bukan panel samping (ketentuan Bapak 17 Sep 2026).
+
+     Dipakai untuk DUA keperluan:
+       1. pintu masuk sendiri — daftar istilah + kotak cari
+          (dibuka dari gudang plugin 🧩 → 📚 Kamus Istilah → ▶ Buka)
+       2. tempat ARTINYA tampil — waktu kata istilah di catatan diklik,
+          halaman ini menimpa catatan dan langsung membuka arti istilah itu.
+
+     Susunan isi (WAJIB urutan ini — ketentuan Bapak):
+       1️⃣  keterangan (nama istilah + arti, bisa digulir — arti terpanjang 1.324 huruf)
+       2️⃣  📚 istilah lain di dalam arti  (diklik = pindah istilah · berantai)
+       3️⃣  📖 AYATNYA (n) — chip ayat → teksnya tampil di SATU kolom yang sama
+       4️⃣  [🏠 kembali ke catatan] → gulir balik ke kata yang tadi diklik + sorot kuning
+
+     ⚠️ DUA syarat wajib (jebakan yang sudah diketahui):
+       • elemen ini HARUS di luar #app-utama (kalau di dalam, ikut tersembunyi)
+       • `.app[hidden]{display:none!important}` wajib ada — `display:flex`
+         menimpa atribut hidden bawaan browser.
+     Diisi oleh plugin/kamus/tampilan.js.                                  -->
+<div class="app halaman-kamus" id="kamus-halaman" hidden>
+
+  <div class="kamus-nav">
+    <button id="kamus-kembali" class="kembali" title="Kembali ke catatan — tepat di baris & kata yang tadi diklik">🏠</button>
+    <button id="kamus-back" title="Kembali ke istilah sebelumnya" disabled>↩</button>
+    <span class="kamus-judul" id="kamus-judul">📚 Kamus Istilah</span>
+    <button id="kamus-daftar" title="Daftar semua istilah + kotak cari">📋<span class="bk-lbl"> Daftar</span></button>
+    <button id="kamus-cari-btn" title="Cari istilah">🔍<span class="bk-lbl"> Cari</span></button>
+  </div>
+
+  <!-- kotak cari (muncul saat 🔍 / saat halaman daftar) -->
+  <div class="kamus-cari-baris" id="kamus-cari-baris" hidden>
+    <input type="text" id="kamus-cari" placeholder="cari istilah… (mis. tebus)" autocomplete="off"
+           title="Ketik sepenggal kata — mis. “tebus” menemukan Tebusan & Penebusan">
+    <span class="kamus-cari-info" id="kamus-cari-info"></span>
+    <button id="kamus-cari-tutup" title="Tutup kotak cari">✕</button>
+  </div>
+
+  <div class="kamus-isi" id="kamus-isi"></div>
+</div>
+
+<!-- ================= HALAMAN PEMBACA PENGUAT (K47 — MANDIRI) =================
+     Dibuka dari 🧩 Gudang Plugin → 🖊 Pembaca Penguat → ▶ Buka.
+
+     ⚠️ HALAMAN INI SENGAJA MANDIRI — TIDAK menyentuh catatan/editor:
+        ❌ tidak menandai kata · ❌ tidak menambah panel di catatan ·
+        ❌ tidak mengubah isi catatan sama sekali.
+        ✅ hanya membaca hasil penguat (komentar per ayat) seperti membaca Alkitab.
+
+     • elemen ini HARUS di luar #app-utama (kalau di dalam, ikut tersembunyi)
+     • `.app[hidden]{display:none!important}` wajib ada — `display:flex`
+       menimpa atribut hidden bawaan browser.
+     Diisi oleh plugin/penguat/tampilan.js.                                -->
+<div class="app halaman-penguat" id="penguat-halaman" hidden>
+
+  <div class="pg-nav">
+    <button id="pg-kembali" class="kembali" title="Kembali ke catatan (Esc / Ctrl+B)">🏠</button>
+    <select id="pg-kitab" title="Pilih kitab yang sudah punya penguat"></select>
+    <select id="pg-pasal" title="Pilih pasal"></select>
+    <button id="pg-prev" title="Pasal sebelumnya">◀</button>
+    <button id="pg-next" title="Pasal berikutnya">▶</button>
+    <button id="pg-cari-btn" title="Cari kata di dalam isi penguat">🔍<span class="pg-lbl"> Cari</span></button>
+    <!-- K54 — pintu melihat penguat DI HALAMAN BACA ALKITAB (tombol 🖊 per ayat) -->
+    <button id="pg-alkitab" title="Lihat penguat ini di halaman baca Alkitab (tombol 🖊 di bawah tiap ayat)">📖</button>
+  </div>
+
+  <!-- kotak cari (muncul saat 🔍 ditekan) -->
+  <div class="pg-cari-baris" id="pg-cari-baris" hidden>
+    <input type="text" id="pg-cari" placeholder="cari kata di isi penguat… (mis. kasih)" autocomplete="off"
+           title="Mencari DI DALAM ISI PENGUAT — hasilnya bisa diklik untuk menuju ayatnya">
+    <button id="pg-cari-tutup" title="Bersihkan pencarian">✕</button>
+  </div>
+
+  <div class="pg-hasil" id="pg-hasil" hidden></div>
+  <div class="pg-isi" id="pg-isi"></div>
+</div>
+
+<!-- ============ HALAMAN SEJARAH ALKITAB (halaman ke-6, 23 Sep 2026 · K55c) ============
+     Bapak 23 Sep 2026: *“saya mau ubah konsep dari k55c. Jika klik [🧩▼] <- muncul
+     semua plugin .. sekarang plugin [sejarah] > klik kosong. 3. disini sejarah
+     **“alkitab” (bukan kitab2)** di tampilkan.”*
+
+     ⇒ Pintu plugin 📖 Sejarah Kitab MEMBUKA HALAMAN INI (1 klik) dan langsung
+       menampilkan **SEJARAH ALKITAB (prakata)** — “Bagaimana Firman menjadi tulisan”
+       (15.356 huruf) + pintasan 66 kitab.
+
+     ⚠️ HALAMAN INI SENGAJA MANDIRI — TIDAK menyentuh catatan:
+        ❌ tidak menandai kata · ❌ tidak menambah panel di catatan ·
+        ❌ tidak mengubah isi catatan sama sekali.
+        ✅ hanya MEMBACA data sejarah yang sudah ada.
+
+     • elemen ini HARUS di luar #app-utama (kalau di dalam, ikut tersembunyi)
+     • `.app[hidden]{display:none!important}` wajib ada — `display:flex`
+       menimpa atribut hidden bawaan browser.
+     • wadah isi sengaja diberi kelas `baca-isi` supaya gaya `.ay-*` &
+       `.ay-sejarah-*` yang sudah ada (K55) ikut terpakai — ❌ tanpa CSS baru
+       untuk isinya.
+     Diisi oleh plugin/sejarah/tampilan.js.                                       -->
+<div class="app halaman-sejarah" id="sejarah-halaman" hidden>
+  <div class="sj-nav">
+    <button id="sj-kembali" class="kembali" title="Kembali ke catatan (Esc / Ctrl+B)">🏠</button>
+    <span class="sj-judul" id="sj-judul" title="Sejarah Alkitab — bagaimana Firman menjadi tulisan">📖 SEJARAH ALKITAB</span>
+    <button id="sj-cari-btn" title="Cari kata di dalam teks sejarah">🔍</button>
+  </div>
+
+  <!-- kotak cari (muncul saat 🔍 ditekan)
+       K58 (23 Sep 2026) — permintaan Bapak: *“misal cari kata ‘dead sea’ lewat fitur
+       ‘cari’ jika ketemu di beri tanda pada tulisan ‘dead sea’ dan next atau preview..
+       selama fitur cari masih ada tulisan ‘dead sea’ tanda atau warna pada tulisan
+       ‘dead sea’ masih ada.. sampai ditutup atau diganti”*
+       ⇒ jadi: kata yang ketemu DIBERI WARNA (tetap ada selama pencarian belum
+         ditutup/diganti) + tombol ◀ ▶ untuk berpindah temuan + penghitung “3/5”.
+       Susunan SAMA dengan bar cari di catatan (#bar-cari) supaya seragam. -->
+  <div class="pg-cari-baris" id="sj-cari-baris" hidden>
+    <input type="text" id="sj-cari" placeholder="cari kata di teks sejarah… (mis. dead sea)" autocomplete="off"
+           title="Mencari DI DALAM teks sejarah — kata yang ketemu diberi warna, ◀ ▶ untuk pindah">
+    <button id="sj-cari-prev" title="Temuan sebelumnya" aria-label="Temuan sebelumnya">◀</button>
+    <button id="sj-cari-next" title="Temuan berikutnya" aria-label="Temuan berikutnya">▶</button>
+    <span class="pg-cari-info" id="sj-cari-info" title="Temuan ke-n dari jumlah temuan"></span>
+    <button id="sj-cari-tutup" title="Tutup pencarian &amp; hilangkan tanda">✕</button>
+  </div>
+  <div class="pg-hasil" id="sj-hasil" hidden></div>
+
+  <div class="baca-isi sj-isi" id="sj-isi"></div>
+</div>
+
+<!-- ============ HALAMAN 🗺️ PETA ALKITAB (halaman ke-7, 4 Okt 2026 · K68) ============
+     Bapak 4 Okt 2026: *“peta-lab sekarang di jadikan plugin pada ANodes-1berkas
+     dengan nama peta..”*
+     ⇒ LAB peta (`peta-lab.html`) yang sudah disetujui bentuknya dijadikan
+       **plugin resmi** bernama **Peta**, dengan HALAMAN SENDIRI (pola 📖 Sejarah K55c).
+
+     ⚠️ HALAMAN INI SENGAJA MANDIRI — TIDAK menyentuh catatan:
+        ❌ tidak menandai kata · ❌ tidak menambah panel di catatan ·
+        ❌ tidak mengubah isi catatan sama sekali.
+        ✅ hanya MEMBACA data peta yang sudah ada.
+
+     • elemen ini HARUS di luar #app-utama (kalau di dalam, ikut tersembunyi)
+     • `.app[hidden]{display:none!important}` wajib ada — `display:flex`
+       menimpa atribut hidden bawaan browser.
+     • ⚠️ SEMUA id diberi awalan `peta-` supaya ❌ tidak bentrok dengan id
+       aplikasi (`#info`, `#bar`, `#catatan`, `#panggung`, …).
+     Diisi oleh plugin/peta/peta.js (mesin gambar) + plugin/peta/tampilan.js.  -->
+<div class="app halaman-peta" id="peta-halaman" hidden>
+  <div class="peta-lab">
+
+    <div class="peta-atas">
+      <div class="peta-kepala">
+        <button id="peta-kembali" class="peta-kembali" title="Kembali ke catatan (Esc / Ctrl+B)">🏠</button>
+        <span class="peta-merk">🗺️ PETA ALKITAB</span>
+        <span class="peta-sub" id="peta-versi">citra relief NASA</span>
+      </div>
+
+      <div class="peta-panggung" id="peta-panggung">
+        <svg id="peta-svg" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+
+      <div class="peta-info" id="peta-info" hidden>
+        <span class="peta-ikon" id="peta-info-ikon">📍</span>
+        <span class="peta-isi">
+          <span class="peta-nama" id="peta-info-nama"></span>
+          <span class="peta-jenis" id="peta-info-jenis"></span>
+          <div class="peta-ket" id="peta-info-ket"></div>
+          <div class="peta-ref" id="peta-info-ref"></div>
+        </span>
+        <button class="peta-tutup" id="peta-info-tutup" title="tutup keterangan">✕</button>
+      </div>
+
+      <!-- KOLOM ISI AYAT (K68 butir b — 4 Okt 2026)
+           Bapak: *“ada ayat > klik > tampil isi ayat tsb dibawah informasi ..
+           saat klik ayat .. dibawah unhide kolom isi ayat tsb.. klik ayat lain
+           ayat ditimpa dengan ayat baru.. dan jika klik ayat yg sama hide kolom tsb”*
+           ⇒ SATU slot, gantian (❌ bukan menumpuk) — pola SAMA seperti
+             `pratinjau()` di plugin 🔗 Ayat Terkait.
+           Keputusan Bapak: (1a) plugin Alkitab belum dipasang ⇒ rujukan tetap
+           bisa diklik + pesan · (2b) penutup = tombol [✕] · (3a) rentang ⇒
+           SEMUA ayat ditampilkan.  Diisi `plugin/peta/peta.js`. -->
+      <div class="peta-ayat" id="peta-ayat" hidden></div>
+    </div><!-- /peta-atas -->
+
+    <div class="peta-panel">
+      <div class="peta-bar" id="peta-bar">
+        <button data-jenis="semua" class="aktif" title="sakelar: ON = tampilkan pilihan Anda · OFF = kosongkan">📋 pilihan</button>
+        <button data-jenis="titik">🏙️ titik</button>
+        <button data-jenis="air">💧 air</button>
+        <button data-jenis="relief">⛰️ relief</button>
+        <button data-jenis="gurun">🏜️ gurun</button>
+        <button data-jenis="daerah">🗺️ wilayah</button>
+        <button id="peta-btn-subur" title="tampilkan/sembunyikan warna tanah subur">🌿 subur</button>
+        <span class="peta-pisah"></span>
+        <button id="peta-tampil" title="tampilkan semua nama dalam daftar sebagai label di peta">🏷️ semua</button>
+        <button id="peta-sembunyi" title="sembunyikan semua nama pilihan dari peta">🧹</button>
+        <span class="peta-pisah"></span>
+        <button id="peta-zoom-in" title="perbesar">＋</button>
+        <button id="peta-zoom-out" title="perkecil">−</button>
+        <button id="peta-reset" title="tampak penuh">⌂</button>
+      </div>
+
+      <div class="peta-panel-kepala">
+        <span class="peta-judul"><b>📍 Daftar lokasi</b><span id="peta-jumlah"></span></span>
+        <input id="peta-cari" type="search" placeholder="cari nama…" autocomplete="off">
+      </div>
+      <div class="peta-panel-daftar" id="peta-daftar"></div>
+    </div>
+
+    <div class="peta-legenda">
+      <span class="peta-lbaris"><i style="background:#cfe2f0;border:1px solid #8fb6d4"></i>laut</span>
+      <span class="peta-lbaris"><i style="background:#4f86bd"></i><b>garis biru berkelok = sungai</b></span>
+      <span class="peta-lbaris"><i style="background:#4f86bd;border-radius:50%"></i>danau</span>
+      <span class="peta-lbaris"><i style="background:#ead9a8;border:1px solid #cbb98a"></i>padang gurun</span>
+      <span class="peta-lbaris"><i style="background:#d7e4b6;border:1px solid #b3c78e"></i>tanah subur</span>
+      <span class="peta-lbaris"><i style="background:#a8916d"></i>bentang pergunungan</span>
+      <span class="peta-lbaris"><i style="background:#3d3128;border-radius:50%"></i>kota</span>
+      <span class="peta-lbaris"><i style="background:#e8281b;height:2px;border-radius:0"></i>batas penamaan laut</span>
+      <span class="peta-lbaris"><i style="background:linear-gradient(135deg,#20406b,#b9884e)"></i>citra relief NASA</span>
+    </div>
+
+    <div class="peta-catatan" id="peta-catatan">
+      <span class="peta-cisi" id="peta-catatan-isi"><b>🗺️ PETA</b> — klik nama ⇒ wilayah digaris + keterangan. Tombol jenis = <b>sakelar</b>:
+        klik = nyala · klik lagi = mati · <b>boleh beberapa nyala bersamaan</b> (mis. 🏙️ titik + 💧 air).
+        📋 pilihan = sakelar: ON = tampilkan pilihan Anda (belum ada pilihan ⇒ peta tanpa nama) · OFF = kosongkan. 🌿 subur = warna tanah subur. 🏷️ semua = tampilkan semua nama · 🧹 = sembunyikan.
+        Garis merah = batas penamaan laut.
+        <br>Dasar peta = <b>citra relief NASA</b> (bentuk geografi nyata).</span>
+      <button class="peta-x" id="peta-catatan-x" title="buka/tutup keterangan">▸</button>
+    </div>
+
+  </div><!-- /peta-lab -->
+</div>
+
+<!-- ================= HALAMAN 🔖 BOOKMARK AYAT (halaman ke-9) =================
+     K81 (30 Okt 2026) — plugin 🔖 Bookmark Ayat (ikon 📌 → 🔖 pada K82).
+     Bapak: *“setelah bookmark hasilnya ada pages di bookmark daftar ayat2 yg
+     dibookmark user user bisa edit/hapus”*
+     Dibuka dari 🧩 gudang plugin → 🔖 Bookmark Ayat → ▶ Buka, ATAU dari tombol 🔖 di bar atas Alkitab, ATAU dari [🔖 Bookmark] di bar pilihan ayat (K82).
+     ⚠️ WAJIB anak `body` (kalau di dalam #app-utama ⇒ ikut tersembunyi). -->
+<div class="app halaman-bookmark" id="bookmark-halaman" hidden>
+  <div class="bm-nav">
+    <button id="bm-kembali" class="bm-kembali" title="Kembali ke catatan (Esc / Ctrl+B)">🏠</button>
+    <span class="bm-merk">🔖 BOOKMARK AYAT</span>
+    <span class="bm-sub" id="bm-versi">daftar ayat yang ditandai</span>
+  </div>
+  <div class="bm-isi" id="bm-isi"></div>
+</div>
+
+<!-- ================= HALAMAN BACAAN ALKITAB 1 TAHUN (halaman ke-10 · K96) =================
+     Bapak 3 Nov 2026: “saya mau buat bacaan 1 th alkitab artinya 1th baca selesai semua..”
+     Menggantikan kartu 🕊️ Pengingat Firman yang selama ini kosong.
+     ⚠️ WAJIB anak `body` (kalau di dalam #app-utama ⇒ ikut tersembunyi — pelajaran K8).
+     Dibuka dari 🧩 gudang plugin → 🗓️ Bacaan Alkitab 1 Tahun → ▶ Buka. -->
+<div class="app halaman-baca1tahun" id="baca1tahun-halaman" hidden>
+  <div class="bt-nav">
+    <button id="bt-kembali" class="bt-kembali" title="Kembali ke catatan (Esc / Ctrl+B)">🏠</button>
+    <span class="bt-merk">🗓️ BACAAN 1 TAHUN</span>
+    <span class="bt-sub" id="bt-versi">365 hari · seluruh Alkitab</span>
+  </div>
+  <div class="bt-isi" id="bt-isi"></div>
+</div>
+
+<!-- ================= HALAMAN 🗂️ BERKAS TERSIMPAN (sebesar catatan) =================
+     K28h (3 Nov 2026) — halaman ini MENGGANTIKAN menu [Doc].
+     Isinya: daftar rantai 🌿 Ayat Terkait yang sudah disimpan di halaman kerja.
+     Tiap baris: [🌿 Buka] · [ + Ayat ] (kirim ke catatan) · [🗑 Hapus].
+     ⚠️ Halaman WAJIB anak `body` (kalau di dalam #app-utama, ia ikut tersembunyi). -->
+<div class="app halaman-berkas" id="berkas-halaman" hidden>
+  <div class="bk-nav">
+    <button id="bk-kembali" title="Kembali ke catatan">🏠</button>
+    <span class="bk-judul">🗂️ Berkas Tersimpan</span>
+    <span class="bk-sp"></span>
+    <button id="bk-kerja" title="Buka halaman kerja 🌿 Ayat Terkait (menyusun rantai baru)">🌿<span class="bk-lbl"> Kerja</span></button>
+    <button id="bk-bersih" title="Hapus SEMUA berkas rantai di daftar ini (catatan tidak tersentuh)">🗑<span class="bk-lbl"> Bersihkan</span></button>
+  </div>
+  <div class="bk-isi" id="bk-isi"></div>
+</div>
+
+<!-- ================= HALAMAN 🕒 LINIMASA SEJARAH (sebesar catatan) =================
+     K87 (3 Nov 2026) — garis waktu 450 peristiwa Alkitab berurutan menurut tahun.
+     ⚠️ WAJIB anak `body` (kalau di dalam #app-utama ⇒ ikut tersembunyi — pelajaran K8).
+     Dibuka dari 🧩 gudang plugin → 🕒 Linimasa Sejarah → ▶ Buka. -->
+<div class="app halaman-linimasa" id="linimasa-halaman" hidden>
+  <div class="lm-nav">
+    <button id="lm-kembali" title="Kembali ke catatan (Esc / Ctrl+B)">🏠</button>
+    <span class="lm-merk">🕒 LINIMASA SEJARAH</span>
+    <span class="lm-sub" id="lm-versi">450 peristiwa · 4.003 SM – 57 M</span>
+  </div>
+  <div class="lm-saring" id="lm-saring"></div>
+  <div class="lm-isi" id="lm-isi"></div>
+</div>
+
+<!-- modal edit tabel -->
+<div class="modal-bg" id="modal-tabel">
+  <div class="modal">
+    <div class="m-kepala">
+      <span>✎ Edit tabel</span><span class="sp"></span>
+      <button id="m-tt" title="Tutup">✕</button>
+    </div>
+    <div class="m-isi">
+      <div class="baris-btn">
+        <button id="tb-baris">+ Baris</button>
+        <button id="tb-baris-hapus">− Baris</button>
+        <button id="tk-kolom">+ Kolom</button>
+        <button id="tk-kolom-hapus">− Kolom</button>
+      </div>
+      <div id="grid-tabel"></div>
+    </div>
+    <div class="m-kaki">
+      <button class="batal" id="m-batal">Batal</button>
+      <button class="ok" id="m-masukkan">Masukkan ke tulisan</button>
+    </div>
+  </div>
+</div>
+
+<!-- modal sinkron ☁️ (K77) -->
+<div class="modal-bg" id="modal-sinkron">
+  <div class="modal">
+    <div class="m-kepala">
+      <span>☁️ Sinkron PC ⇄ HP</span><span class="sp"></span>
+      <button id="sk-tt" title="Tutup">✕</button>
+    </div>
+    <div class="m-isi">
+      <p class="sk-ket">
+        Catatan, pengaturan, istilah pribadi, rantai ayat, dan bookmark disamakan lewat
+        <b>Cloudflare Worker</b>. Token database <b>tidak</b> disimpan di berkas ini.
+      </p>
+
+      <p class="sk-ket sk-ket-ok">
+        ✅ <b>Sudah tersambung.</b> Tidak perlu mengisi apa pun — cukup tekan
+        <b>☁️ Sinkron sekarang</b>.
+      </p>
+
+      <div class="set-baris">
+        <label for="sk-otomatis">Sinkron otomatis</label>
+        <select id="sk-otomatis">
+          <option value="1">Ya — kirim tiap simpan, ambil tiap 1 menit</option>
+          <option value="0">Tidak — hanya lewat tombol</option>
+        </select>
+      </div>
+
+      <div id="sk-status" class="sk-status">Belum diatur.</div>
+    </div>
+    <div class="m-kaki">
+      <button class="batal" id="sk-tutup">Tutup</button>
+      <button id="sk-uji">Uji sambungan</button>
+      <button class="ok" id="sk-sekarang">☁️ Sinkron sekarang</button>
+    </div>
+  </div>
+</div>
+
+<!-- modal pengaturan ⚙ -->
+<div class="modal-bg" id="modal-setting">
+  <div class="modal">
+    <div class="m-kepala">
+      <span>⚙ Pengaturan</span><span class="sp"></span>
+      <button id="s-tt" title="Tutup">✕</button>
+    </div>
+    <div class="m-isi">
+
+      <div class="set-baris">
+        <label>Jenis huruf</label>
+        <select id="set-jenis">
+          <option value="system">Biasa (System)</option>
+          <option value="rounded">Rapi (Segoe UI)</option>
+          <option value="serif">Klasik (Georgia)</option>
+          <option value="mono">Kode (Consolas)</option>
+        </select>
+      </div>
+
+      <div class="set-baris">
+        <label>Besar huruf keseluruhan <span class="set-nilai" id="set-font-nilai">16 px</span></label>
+        <input type="range" id="set-font" min="12" max="24" step="1" value="16">
+      </div>
+
+      <div class="set-baris">
+        <label>Kecerahan layar <span class="set-nilai" id="set-cahaya-nilai">100%</span></label>
+        <input type="range" id="set-cahaya" min="50" max="100" step="5" value="100">
+      </div>
+
+      <div class="set-contoh" id="set-contoh">
+        <b>Contoh tulisan</b><br>
+        ANodes — catatan rapi seperti Word.
+      </div>
+
+      <div class="set-baris" style="margin-top:18px">
+        <label>Pintasan tombol (bisa diganti)</label>
+        <div class="set-catatan-pintas">
+          Klik kotak pintasan lalu tekan kombinasi baru (mis. <b>Ctrl+1</b>).
+          Tekan <b>Esc</b> saat merekam untuk membatalkan, atau <b>Del</b> untuk mengosongkan.
+        </div>
+        <table class="set-pintas" id="set-pintas-tabel"></table>
+      </div>
+
+    </div>
+    <div class="m-kaki">
+      <button class="batal" id="s-pintas-reset">Reset pintasan</button>
+      <button class="ok" id="s-tutup">Selesai</button>
+    </div>
+  </div>
+</div>
+
+<!-- modal gudang plugin 🧩 -->
+<div class="modal-bg" id="modal-plugin">
+  <div class="modal plugin-modal">
+    <div class="m-kepala">
+      <span>🧩 Gudang Plugin</span><span class="sp"></span>
+      <button id="p-tt" title="Tutup">✕</button>
+    </div>
+    <div class="m-isi" id="p-isi"></div>
+  </div>
+</div>
+
+<!-- lapisan "sedang memuat" plugin (mis. data Alkitab 5 MB) -->
+<div class="memuat-lapis" id="memuat-plugin" hidden>
+  <div class="memuat-kotak">
+    <div class="memuat-nama" id="memuat-nama">📖 Memuat plugin Alkitab…</div>
+    <div class="memuat-bar"><span id="memuat-isi"></span></div>
+    <div class="memuat-ket" id="memuat-ket">mohon tunggu sebentar — hanya sekali ini</div>
+  </div>
+</div>
+
+<!-- toast simpan -->
+<div id="toast"></div>
+
+<!-- input berkas impor -->
+<input type="file" id="file-impor" accept=".json,.md,.txt,application/json,text/markdown,text/plain" hidden>
+
+<!-- plugin (keterangan) — dimuat lewat <script src>, JANGAN fetch (diblokir file://) -->
+<script src="plugin/alkitab/plugin.js"></script>
+<script src="plugin/alkitab/alkitab.js"></script>
+<script src="plugin/alkitab/tampilan.js"></script>
+<!-- 📖 K55b — plugin SEJARAH KITAB (mandiri: keterangan · mesin · tampilan ·
+     data 98 KB). Data hanya dibaca saat dipakai ⇒ ANodes tetap cepat.
+     Tanda di halaman baca menempel lewat sambungan resmi tambahPenghias(). -->
+<script src="plugin/sejarah/plugin.js"></script>
+<script src="plugin/sejarah/sejarah.js"></script>
+<script src="plugin/sejarah/tampilan.js"></script>
+<!-- plugin Ayat Terkait (K25):
+       plugin.js = keterangan · terkait.js = MESIN (data kaitan antar ayat)
+       data/ayat-terkait/data/silang.js baru dibaca saat plugin dipasang
+       (5,2 MB — kalau ikut dimuat terus, ANodes jadi lambat dibuka). -->
+<script src="plugin/ayat-terkait/plugin.js"></script>
+<script src="plugin/ayat-terkait/terkait.js"></script>
+<script src="plugin/ayat-terkait/tampilan.js"></script>
+<script src="plugin/ayat-terkait/kerja.js"></script>
+
+<!-- 📚 K42 — plugin Kamus Istilah (keterangan · mesin · tampilan) -->
+<script src="plugin/kamus/plugin.js"></script>
+<script src="plugin/kamus/kamus.js"></script>
+<script src="plugin/kamus/tampilan.js"></script>
+<script src="plugin/penguat/plugin.js"></script>
+<script src="plugin/penguat/penguat.js"></script>
+<script src="plugin/penguat/tampilan.js"></script>
+<!-- 🕊️ Pengingat Firman — DILEPAS dari halaman (K96, 3 Nov 2026).
+     Digantikan 🗓️ Bacaan Alkitab 1 Tahun. Berkas plugin/pengingat/ TIDAK dihapus:
+     idenya (mengingatkan ayat yang ditandai) masih dicatat di papan IDE (I-09) dan
+     bisa menyusul DI DALAM plugin 🗓️. Tidak dimuat lagi karena kartunya sudah diganti
+     — kalau dibiarkan, penggabung versi HP ikut menyatukan isinya jadi komentar HTML
+     dan berkas HP membengkak tanpa guna. -->
+
+<!-- 🗓️ K96 (3 Nov 2026) — Bacaan Alkitab 1 Tahun (menggantikan 🕊️ Pengingat Firman)
+     ⚠️ URUTAN WAJIB: data dulu → mesin → keterangan → tampilan.
+        (mesin membaca `window.ANodesBacaData` saat dimuat) -->
+<script src="plugin/baca1tahun/data/baca.js"></script>
+<script src="plugin/baca1tahun/baca.js"></script>
+<script src="plugin/baca1tahun/plugin.js"></script>
+<script src="plugin/baca1tahun/tampilan.js"></script>
+
+<!-- K81 (30 Okt 2026) — 🔖 Bookmark Ayat -->
+<script src="plugin/bookmark/plugin.js"></script>
+<script src="plugin/bookmark/bookmark.js"></script>
+<script src="plugin/bookmark/tampilan.js"></script>
+
+<!-- 🔤 K85 (1 Nov 2026) — Interlinear (bahasa asli + kode Strong) · TAHAP 1 = 4 Injil
+     ⚠️ URUTAN WAJIB: data dulu → mesin → keterangan → tampilan.
+        (mesin membaca `window.ANodesInterlinearData` saat dimuat) -->
+<script src="plugin/interlinear/data/interlinear.js"></script>
+<!-- 🖊 K88 (1 Nov 2026) — penjelasan Yunani → Indonesia (TANPA angka Strong)
+     data dibangun `tools/siapkan-data-yunani.js`, sumber penjelasan
+     `tools/yunani-penjelasan.json` -->
+<script src="plugin/interlinear/data/yunani.js"></script>
+<!-- ✡ K90 (1 Nov 2026) — penjelasan IBRANI untuk PERJANJIAN LAMA (39 kitab)
+     data dibangun `tools/siapkan-data-ibrani.js`, sumber penjelasan
+     `tools/ibrani-penjelasan.json` -->
+<script src="plugin/interlinear/data/ibrani.js"></script>
+<!-- 🔤 K85 tahap 2 (3 Nov 2026) — interlinear PERJANJIAN BARU (Kisah 26 s/d Wahyu)
+     ⚠️ SEBAB: sumber idkjv HANYA punya 4 Injil + Kisah 1–25 ⇒ bagian ini
+        memakai BENTUK B (kata Yunani + alih huruf + arti Indonesia).
+     data dibangun `tools/siapkan-data-pb.js`, sumber arti `tools/pb-penjelasan.json` -->
+<script src="plugin/interlinear/data/pb.js"></script>
+<script src="plugin/interlinear/interlinear.js"></script>
+<script src="plugin/interlinear/yunani.js"></script>
+<script src="plugin/interlinear/ibrani.js"></script>
+<script src="plugin/interlinear/pb.js"></script>
+<script src="plugin/interlinear/plugin.js"></script>
+<script src="plugin/interlinear/tampilan.js"></script>
+
+<!-- 🔀 K86 (3 Nov 2026) — Paralel Terjemahan (TB ⇄ AYT)
+     ⚠️ URUTAN WAJIB: data dulu → mesin → keterangan → tampilan.
+        (mesin membaca `window.ANodesParalelData` saat dimuat)
+     ⚠️ SEBAB AYT, ❌ bukan TSI: paket TSI (eBible `ind`) hanya 48 kitab —
+        18 kitab PL tidak ada (termasuk Mazmur, Yeremia, Yehezkiel, Daniel).
+        AYT = 66 kitab · 31.102 ayat (persis sama dengan TB).
+     data dibangun `tools/siapkan-data-paralel.js` dari `tools/_sumber-ayt/` -->
+<script src="plugin/paralel/data/paralel.js"></script>
+<script src="plugin/paralel/paralel.js"></script>
+<script src="plugin/paralel/plugin.js"></script>
+<script src="plugin/paralel/tampilan.js"></script>
+
+<!-- 📖 K99 (3 Nov 2026) — Judul Perikop (judul bagian di atas ayat)
+     ⚠️ URUTAN WAJIB: data dulu → mesin → keterangan → tampilan.
+        (mesin membaca `window.ANodesPerikopData` saat dimuat)
+     ⚠️ SUMBER = AYT (CC BY-NC 4.0), ❌ bukan TB (LAI berhak cipta).
+        Terukur 2.573 judul · menutup 1.144 dari 1.189 pasal (96,2 %).
+     data dibangun `tools/siapkan-data-perikop.js` dari `tools/_sumber-ayt/` -->
+<script src="plugin/perikop/data/perikop.js"></script>
+<script src="plugin/perikop/perikop.js"></script>
+<script src="plugin/perikop/plugin.js"></script>
+<script src="plugin/perikop/tampilan.js"></script>
+
+<!-- 🕒 LINIMASA SEJARAH (K87 — 3 Nov 2026) — 450 peristiwa Alkitab berurutan
+     menurut tahun (4.003 SM – 57 M), bisa disaring per zaman.
+     ⚠️ URUTAN WAJIB: data dulu → mesin → keterangan → tampilan.
+     Sumber: robertrouse/theographic-bible-metadata (CC-BY-SA-4.0) — terjemahan Indonesia ANodes.
+     data dibangun `tools/siapkan-data-linimasa.js` dari `tools/_sumber-linimasa/Events.csv` -->
+<script src="plugin/linimasa/data/linimasa.js"></script>
+<script src="plugin/linimasa/linimasa.js"></script>
+<script src="plugin/linimasa/plugin.js"></script>
+<script src="plugin/linimasa/tampilan.js"></script>
+
+<!-- 🗺️ PETA ALKITAB (K68 — 4 Okt 2026) — order Bapak: *“peta-lab sekarang di jadikan
+     plugin pada ANodes-1berkas dengan nama peta..”*
+     ⚠️ URUTAN WAJIB: data dulu → mesin → keterangan → tampilan.
+        (mesin membaca `window.ANodesPetaData` & `window.ANodesPetaBumi` saat dimuat) -->
+<script src="plugin/peta/data/peta.js"></script>
+<script src="plugin/peta/data/bumi.js"></script>
+<script src="plugin/peta/peta.js"></script>
+<script src="plugin/peta/ayat.js"></script>
+<script src="plugin/peta/plugin.js"></script>
+<script src="plugin/peta/tampilan.js"></script>
+
+<!-- K79 (28 Okt 2026) — ruang aman layar (kamera / gesture bar). Dimuat PALING AWAL
+     supaya --sa-top sudah terisi sebelum tata letak dihitung. -->
+<script src="js/layar.js"></script>
+<!-- 👤 K100 (3 Nov 2026) — pemisahan data per email.
+     WAJIB dimuat SEBELUM js/store.js, js/setting.js, js/sinkron.js dan semua
+     plugin penyimpan — karena modul-modul itu menanyakan awalan kunci ke sini
+     (`ANodesPengguna.kunci(...)`). -->
+<script src="js/pengguna.js"></script>
+<script src="js/sinkron.js"></script>
+<script src="js/store.js"></script>
+<script src="js/setting.js"></script>
+<script src="js/plugin.js"></script>
+<!-- 🗂️ BERKAS TERSIMPAN (K28h — 3 Nov 2026) — menggantikan menu [Doc].
+     Menampilkan daftar rantai 🌿 Ayat Terkait yang sudah disimpan. -->
+<script src="js/berkas.js"></script>
+<!-- Pengolah markdown → HTML (dipindah dari js/dokumen.js saat [Doc] dihapus).
+     Dipakai Impor .md/.txt · tombol “📖 Rapi” · rapikan naskah tempelan (K44). -->
+<script src="js/markdown.js"></script>
+<!-- ❓ BANTUAN (K64 b–e — 3 Nov 2026) — satu tombol [?], isinya menyesuaikan
+     halaman yang sedang terbuka. Teksnya ditulis di dalam berkas ini (❌ tidak
+     dibaca dari panduan.md) karena data dokumen tidak lagi ikut ke versi HP
+     sejak menu [Doc] dihapus (K28h). -->
+<script src="js/bantuan.js"></script>
+<script src="js/editor.js"></script>
+</body>
+</html>

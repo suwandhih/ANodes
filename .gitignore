@@ -1,0 +1,12 @@
+# Rahasia — JANGAN pernah di-commit
+worker/_kredensial.json
+*.kredensial.json
+.env
+
+# Hasil build / bukan bagian aplikasi
+ANodes-1berkas.html
+android-native/
+artifacts/
+backups/
+tools/
+node_modules/
